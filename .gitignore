@@ -1,0 +1,15 @@
+*.pyc
+*.log
+Pipfile*
+*.egg-info/
+
+.DS_Store
+__pycache__
+.pytest*
+
+venv/
+build/
+dist/
+
+work/
+dummy/

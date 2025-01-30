@@ -1,0 +1,14 @@
+# Example batch file for using with toolbox `dummy.py`
+
+CONFIG: # Example of CONFIG header 
+  ALIAS:
+    init: dummy-init
+    run: dummy-run
+
+id1:
+  init: {value: bar}
+  run:
+
+id2:
+  init: {value: baz}
+  run:  

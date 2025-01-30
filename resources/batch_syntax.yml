@@ -1,0 +1,35 @@
+# Example batch file for using with toolbox `dummy.py`
+
+!task init-1:
+  inputs: id1
+  dummy-init:
+    value: bar
+
+!task init-1-br1:
+  inputs: id1~br1
+  dummy-init:
+    value: baz
+
+!task init-2
+  inputs: id2
+  dummy-init:
+    value: baz
+  !target B:
+    # add the following attachment to target id2#B~
+    foobar: "!"
+
+!task run:
+  inputs: "*~" 
+  # note: a parameter "outputs" can also be set if needed
+  dummy-run:
+    # this program does not require any parameter
+
+!task multi:
+  inputs: id1~br1
+  dummy-multi:
+    X: B # variable target input
+
+!task aggregate:
+  inputs: .
+  dummy-agg:
+    # this program does not require any parameter

@@ -1,0 +1,11 @@
+# Example batch file for using with toolbox `dummy.py`
+
+CONFIG: # Example of CONFIG header 
+  TASKS: # run custom tasks
+    task1: {branch: task1, reg: {program: dummy-reg, value: baz}}
+    task2: {branch: task2, reg: {program: dummy-reg, value: bar}}
+
+INCLUDE: 
+  - batch_simple.yml
+
+

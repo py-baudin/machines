@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "machines"
+description = "Create and run batch tasks."
+requires-python = ">=3.7"
+readme = "README.md"
+dynamic = ["version"]
+dependencies = ["pyyaml", "click"]
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools]
+packages = ["machines"]
+
+[tool.setuptools.dynamic]
+version = {attr = "machines.version.__version__"}

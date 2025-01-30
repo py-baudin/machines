@@ -1,0 +1,17 @@
+# Example batch file for using with toolbox `dummy.py`
+
+!task task1:
+  inputs: [id1, id2]
+  outputs: [ra1, ra2]
+  !program dummy-run:
+  !target B:
+    foo: bar
+
+!task task-agg:
+  inputs: [id1~br1, id1~br2, id2~br1]
+  outputs: agg~test
+  !program dummy-agg:
+
+id3:
+  dummy-multi:
+    X: B
