@@ -47,6 +47,11 @@ class FileHandler:
     _load = None
 
     def __init__(self, save=None, load=None):
+        self.set(save=save, load=load)
+        # if not self._save and not self._load:
+        #     raise InvalidFileHandler("At least one of 'save' and 'load' must be set")
+        
+    def set(self, save=None, load=None):
         if save:
             if isinstance(save, dict):
                 self._save = keyword_saver(save)
@@ -62,8 +67,6 @@ class FileHandler:
             else:
                 raise TypeError(f"Loader must be callable, not {load}")
 
-        if not self._save and not self._load:
-            raise InvalidFileHandler("At least one of 'save' and 'load' must be set")
 
     def load(self, target, dirname):
         if not self._load:
