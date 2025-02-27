@@ -20,7 +20,8 @@ PATH_NONE = "_"
 # Default configuration for workdir
 WORKDIR_EXPR = {
     "struct": "<index>/<name><branch>",
-    "index": "<id>[/<id>]",
+    # "index": "<id>[/<id>]",
+    "index": "<id>[.<id>]",
     "branch": "~<id>[.<id>]",
     "noindex": "_",
     "nobranch": "",
