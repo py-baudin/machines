@@ -301,13 +301,7 @@ def program_cli(progname, toolbox):
     @click.option(
         "-o", "--overwrite", is_flag=True, help="Set write mode to 'overwrite'."
     )
-    @click.option(
-        "--mode",
-        type=click.Choice(["overwrite", "upgrade", "test"]),
-        help="Write mode for existing data.",
-    )
     @click.option("-F", "--no-fallback", is_flag=True, help="Disable branch fallback.")
-    @click.option("-A", "--autorun", is_flag=True, help="Autorun parent programs.")
     @click.option("-D", "--dry", is_flag=True, help="Dry run, print dependency graph.")
     @click.option(
         "-a",
@@ -316,21 +310,27 @@ def program_cli(progname, toolbox):
         multiple=True,
         help="Attach value to some targets (YAML string)",
     )
-    @click.option(
-        "--history", type=click.File(), help="File source/destination for history"
-    )
+    # @click.option(
+    #     "--mode",
+    #     type=click.Choice(["overwrite", "upgrade", "test"]),
+    #     help="Write mode for existing data.",
+    # )
+    # @click.option("-A", "--autorun", is_flag=True, help="Autorun parent programs.")
+    # @click.option(
+    #     "--history", type=click.File(), help="File source/destination for history"
+    # )
     @program_options(program)  # add program options
     @program_manual(manual)  # add manual if any
     def program(
         identifiers,
         output_indices,
         output_branches,
-        mode,
         overwrite,
         attach,
-        autorun,
         dry,
         no_fallback,
+        # mode,
+        # autorun,
         **parameters,
     ):
         """Run a program."""
@@ -357,11 +357,11 @@ def program_cli(progname, toolbox):
 
         # run tasks
         opts = {
-            "mode": mode,
             "overwrite": overwrite,
             "dry": dry,
             "no_fallback": no_fallback,
-            "autorun": autorun,
+            "mode": None, # mode,
+            "autorun": False, # autorun,
         }
         tasks = run_tasks(tasks, attachments, **opts)
 
