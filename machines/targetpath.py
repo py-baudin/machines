@@ -81,7 +81,7 @@ class TargetConverter:
             raise ValueError("Invalid path: '%s'" % path)
         return target
 
-
+# deprecated
 class TargetToPath(TargetConverter):
     """standard target to path converter
 
@@ -188,7 +188,7 @@ class VersionerDate:
     def from_version(self, value):
         return value.strftime("%Y%m%d_%H%M%S.%f")
 
-
+# deprecated
 class TargetToPathWithVersion(TargetToPath):
     """TargetToPath with target version"""
 
@@ -230,7 +230,7 @@ class TargetToPathWithVersion(TargetToPath):
         # return last version
         return max([self.versioner.to_version(v) for v in versions])
 
-
+# deprecated
 class TargetToPathDedicated(TargetConverter):
     """target to path converter for dedicated storage ("at root")
 
@@ -321,7 +321,7 @@ class TargetToPathExpr(TargetConverter):
     def __init__(
         self,
         struct: str = "<index>/<name><branch>",
-        index: str = "<id>[/<id>]",
+        index: str = "<id>[.<id>]",
         branch: str = "~<id>[.<id>]",
         noindex: str = "_",
         nobranch: str = "",
@@ -340,6 +340,12 @@ class TargetToPathExpr(TargetConverter):
             name: if set, required target name
             values: dict of accepted values for index and branch structures
         """
+        # check struct
+        if not '<index>' in struct or not '<branch>' in struct:
+            raise ValueError(f'Missing field <index> or <branch> in `struct`')
+        if name is None and not '<name>' in struct:
+            raise ValueError(f'Missing field <name> in `struct`')
+        
         self.struct = struct
         self.name = name
         self.index = IdToPathExpr(index, noindex, values=values)
