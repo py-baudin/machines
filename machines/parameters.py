@@ -436,6 +436,8 @@ class Config(ParameterType):
             return self.ConfigFile(value)
         elif pathlib.Path(value).is_file():
             return self.load(value)
+        elif isinstance(value, str):
+            return yaml.safe_load(value)
         else:
             raise ParameterError(f"Invalid configuration file or value: {value}")
 
