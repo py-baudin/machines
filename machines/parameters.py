@@ -388,7 +388,10 @@ class Config(ParameterType):
         filename = None
 
         def __init__(self, *args, filename=None, **kwargs):
-            super().__init__(*args, **kwargs)
+            try:
+                super().__init__(*args, **kwargs)
+            except ValueError as exc:
+                raise ParameterError(f'Expecting mapping, received: `{args[0]}`')
             self.filename = filename
 
     def __init__(self, presets=None, exts=[".yml", ".txt", ".json"]):
@@ -437,7 +440,7 @@ class Config(ParameterType):
         elif pathlib.Path(value).is_file():
             return self.load(value)
         elif isinstance(value, str):
-            return yaml.safe_load(value)
+            return self.ConfigFile(yaml.safe_load(value))
         else:
             raise ParameterError(f"Invalid configuration file or value: {value}")
 
