@@ -382,18 +382,15 @@ class Path(ParameterType):
 class Config(ParameterType):
     """A configuration/dictionary parameter"""
 
-    class ConfigFile(dict):
-        """a `dict` wrapper with a `filename` attribute"""
-
-        filename = None
-
-        def __init__(self, *args, filename=None, **kwargs):
-            try:
-                super().__init__(*args, **kwargs)
-            except ValueError as exc:
-                raise ParameterError(f'Expecting mapping, received: `{args[0]}`')
-            self.filename = filename
-
+    @staticmethod
+    def config_file(container, filename=None):
+        if not isinstance(container, (list, tuple, dict)):
+            raise ParameterError(f'Expecting list or dict, got: {container}')
+        cls = type('Config', (type(container),), {})
+        obj = cls(container)
+        obj.filename = filename
+        return obj
+    
     def __init__(self, presets=None, exts=[".yml", ".txt", ".json"]):
         self.exts = exts
         self.presets = self.load_presets(presets)
@@ -409,40 +406,43 @@ class Config(ParameterType):
             _presets = {}
             for ext in self.exts:
                 for file in pathlib.Path(presets).glob(f"*{ext}"):
-                    _presets[file.stem] = self.load(file)
+                    _presets[file.stem] = file
             return _presets
         else:
             raise ValueError(f"Invalid `presets`: {presets}")
 
     def load(self, file):
-        """load preset from file"""
+        """load config file from file"""
         with open(file, "r") as fp:
-            data = fp.read()
+            return fp.read()
+    
+    def parse(self, string):
         try:  # YAML
-            config = yaml.safe_load(data)
-            return self.ConfigFile(config, filename=file)
+            return yaml.safe_load(string)
         except Exception as exc:
             pass
-
         try:  # JSON
-            config = json.loads(data)
-            return self.ConfigFile(config, filename=file)
+            return json.loads(string)
         except json.decoder.JSONDecodeError as exc:
             pass
-        raise OSError(f"Invalid configuration file: {file}")
+        raise OSError(f"Invalid YAML/Json format: {string}")
 
     def convert(self, value):
         presets = self.presets
+        filename = None
         if str(value) in presets:
-            return presets[str(value)]
+            value = presets[str(value)]
         if isinstance(value, dict):
-            return self.ConfigFile(value)
+            config = value
         elif pathlib.Path(value).is_file():
-            return self.load(value)
+            # breakpoint()
+            config = self.parse(self.load(value))
+            filename = value
         elif isinstance(value, str):
-            return self.ConfigFile(yaml.safe_load(value))
+            config = self.parse(value)
         else:
             raise ParameterError(f"Invalid configuration file or value: {value}")
+        return self.config_file(config, filename=filename)
 
     def __repr__(self):
         presets = "[" + ", ".join(self.presets) + "]"
