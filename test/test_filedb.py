@@ -84,7 +84,7 @@ def test_filedb(tmpdir):
     assert root.join("id1", "name1").exists()
     assert root.join("_", "name2~branch2").exists()
     assert root.join("id3", "name3~branch3").exists()
-    assert root.join("id41", "id42", "name4~branch41.branch42").exists()
+    assert root.join("id41.id42", "name4~branch41.branch42").exists()
 
     # wrong keys
     with pytest.raises(KeyError):

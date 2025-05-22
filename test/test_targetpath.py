@@ -259,19 +259,19 @@ def test_target_path_expr():
     assert conv._to_path(Target("name", "id1", "br1")) == "id1/name~br1"
     assert (
         conv._to_path(Target("name", ("id1", "id2"), ("br1", "br2")))
-        == "id1/id2/name~br1.br2"
+        == "id1.id2/name~br1.br2"
     )
 
     with pytest.raises(ValueError):
         # invalid id
-        conv._to_path(Target("name", "id1.id2", "br1"))
+        conv._to_path(Target("name", "id1/id2", "br1"))
 
     # from path
     assert conv._from_path("_/name") == Target("name")
     assert conv._from_path("id1/name") == Target("name", "id1", None)
     assert conv._from_path("_/name~br1") == Target("name", branch="br1")
     assert conv._from_path("id1/name~br1") == Target("name", "id1", "br1")
-    assert conv._from_path("id1/id2/name~br1.br2") == Target(
+    assert conv._from_path("id1.id2/name~br1.br2") == Target(
         "name", ("id1", "id2"), ("br1", "br2")
     )
 
@@ -279,7 +279,7 @@ def test_target_path_expr():
         conv._from_path("id1/name~")  # wrong branch
 
     with pytest.raises(ValueError):
-        conv._from_path("id1.id2/name~br1")  # wrong id
+        conv._from_path("id1/id2/name~br1")  # wrong id
 
     with pytest.raises(ValueError):
         conv._from_path("name~br1")  # wrong id
