@@ -3,7 +3,6 @@
 import os
 import pickle
 import json
-import inspect
 
 
 class InvalidFileHandler(Exception):
@@ -38,9 +37,22 @@ def file_handler(obj=None, save=None, load=None):
 
     else:
         return FileHandler(save=save, load=load)
+    
+
+import abc
+class BaseFileHandler(abc.ABC):
+
+    @abc.abstractmethod
+    def load(self, target, dirname):
+        pass
+
+    @abc.abstractmethod
+    def save(self, target, dirname, data):
+        pass
 
 
-class FileHandler:
+
+class FileHandler(BaseFileHandler):
     """Base class for handling target data"""
 
     _save = None
@@ -176,3 +188,123 @@ pickle_handler = Serializer(pickle, ".pickle", binary=True)
 
 # simple handler with json pickle
 json_handler = Serializer(json, ".json", binary=False)
+
+
+#
+import pathlib
+import collections
+
+class DeferredMapping(collections.abc.Mapping):
+    """ Dictionary with deferred data loading """
+
+    class DeferredItem:
+        def __init__(self, func, args=[], kwargs={}):
+            self.func = func
+            self.args = args
+            self.kwargs = kwargs
+        def __call__(self):
+            return self.func(*self.args, **self.kwargs)
+        def __repr__(self):
+            return f'Deferred({self.func.__name__}, *{self.args}, **{self.kwargs})'
+        
+    def defer(self, key, func, args=[], kwargs={}):
+        item = self.DeferredItem(func, args=args, kwargs=kwargs)
+        self._memory[key] = item
+
+    def set(self, key, value):
+        self._memory[key] = value
+
+    def __init__(self, *args, **kwargs):
+        self._memory = dict(*args, **kwargs)
+
+    def __len__(self):
+        return len(self._memory)
+    
+    def __iter__(self):
+        return iter(self._memory)
+    
+    def __getitem__(self, key):
+        if isinstance(self._memory[key], self.DeferredItem):
+            # load data and store in memorys
+            self._memory[key] = self._memory[key]()
+        return self._memory[key]
+    
+    def __repr__(self):
+        return f'Deferred({repr(self._memory)})'
+
+    # mixin:
+    # __contains__, keys, items, values, get, __eq__, and __ne__
+
+
+
+class MultiHandler(BaseFileHandler):
+    def __init__(self):
+        self._savers = {}
+        self._loaders = {}
+    
+    def saver(self, typename, ext='', pass_target=False, kwargs={}):
+        """ define saver for typename (decorator)"""
+        def wrapper(func):
+            def wrapped(target, dirname, data):
+                if not isinstance(data, collections.abc.Mapping):
+                    raise ValueError(f'Expecting mapping, not {type(data)}')
+                dirname = pathlib.Path(dirname)
+                for name in data:
+                    filename = dirname / (name + ext)
+                    args = (filename, data[name])
+                    if pass_target:
+                        args = (target, *args)
+                    func(*args, **kwargs)
+            self._savers[typename] = wrapped
+        return wrapper
+    
+    def loader(self, typename, ext=None, pattern='*', *, deferred=True, pass_target=False, kwargs={}):
+        """ define loader  for typename (decorator)"""
+        exts = []
+        if ext:
+            exts = ext if isinstance(ext, (list, tuple)) else [ext]
+
+        def wrapper(func):
+            def wrapped(target, dirname):
+                dirname = pathlib.Path(dirname)
+                data = DeferredMapping()
+                for ext in exts:
+                    for filename in dirname.glob(pattern):
+                        name = filename.name.rsplit('.')[0]
+                        if name in data:
+                            continue
+                        if not filename.name.endswith(ext):
+                            continue
+                        args = (filename,)
+                        if pass_target:
+                            args = (target, *args)
+                        if deferred:
+                            data.defer(name, func, args=args, kwargs=kwargs)
+                        else:
+                            data.set(name, func(*args, **kwargs))
+                return data
+            self._loaders[typename] = wrapped
+        return wrapper
+    
+    def save(self, target, dirname, data):
+        """ save data """
+        if not isinstance(data, collections.abc.Mapping):
+            raise ValueError(f'In {target}, `data` must be a mapping, not: {type(data)}')
+        invalid = set(data) - set(self._savers)
+        if invalid: 
+            raise ValueError(f'In {target}, no handler found for data category(ies): {list(invalid)}')
+        for key in data:
+            saver = self._savers[key]
+            saver(target, dirname, data[key])
+        
+    def load(self, target, dirname):
+        """ load data """ 
+        data = {}
+        for key in self._loaders:
+            loader = self._loaders[key]
+            data[key] = loader(target, dirname)
+        return data
+
+            
+
+    

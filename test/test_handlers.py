@@ -132,3 +132,31 @@ def test_decorators():
     assert handler.load(Target("A"), "path") == "foobar"
     with pytest.raises(AssertionError):
         handler.load(Target("B"), "path")
+
+
+def test_multihandler_class(tmpdir):
+    handler = handlers.MultiHandler()
+
+    @handler.saver('type1', ext='.typ1')
+    def saver1(file, data):
+        with open(file, 'w') as fp:
+            fp.write(data)
+
+    dirA = tmpdir.mkdir('dirA')
+    handler.save(Target('A'), dirA, {'type1': {'foo': 'bar'}})
+
+    assert (dirA / 'foo.typ1').isfile()
+
+    @handler.loader('type1', ext='.typ1')
+    def loader1(file):
+        with open(file, 'r') as fp:
+            return fp.read()
+
+    data = handler.load(Target('A'), dirA)
+    assert isinstance(data['type1'], handlers.DeferredMapping)
+    # item loading is deferred
+    assert isinstance(data['type1']._memory['foo'], handlers.DeferredMapping.DeferredItem)
+    assert data['type1']['foo'] == 'bar'
+    # item loading is done
+    assert data['type1']._memory['foo'] == 'bar'
+    

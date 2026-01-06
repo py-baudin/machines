@@ -25,6 +25,7 @@ from .handlers import (
     file_handler,
     pickle_handler,
     json_handler,
+    MultiHandler,
 )
 from .factory import factory, hold
 from .toolbox import Toolbox, modifier

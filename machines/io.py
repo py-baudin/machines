@@ -4,7 +4,7 @@
 import re
 import itertools
 from . import target
-from .handlers import FileHandler
+from .handlers import BaseFileHandler
 
 
 class TargetType:
@@ -36,7 +36,7 @@ class TargetType:
         if type:
             self._check_obj_type("type", type)
 
-        if handler and not isinstance(handler, FileHandler):
+        if handler and not isinstance(handler, BaseFileHandler):
             raise TypeError(f"Invalid FileHandler object: {handler}")
 
         self.dest = dest
