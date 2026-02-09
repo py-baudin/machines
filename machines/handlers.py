@@ -223,6 +223,9 @@ class DeferredMapping(collections.abc.Mapping):
     def __iter__(self):
         return iter(self._memory)
     
+    def __contains__(self, key):
+        return key in self._memory
+    
     def __getitem__(self, key):
         if isinstance(self._memory[key], self.DeferredItem):
             # load data and store in memorys
