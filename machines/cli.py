@@ -1306,7 +1306,20 @@ class MultiParameter(click.ParamType):
         # split into values
         if isinstance(value, str):
             value = value.split(self._sep)
-        return [self._type(item, param, ctx) for item in value]
+        retval, fill = [], False
+        for item in value:
+            if item == '...':
+                fill = True
+                continue
+            item = self._type(item, param, ctx)
+            if fill:
+                if not isinstance(retval[-1], int):
+                    self.fail(f'Value filling with `...` only works with integers')
+                seq = range(retval[-1], item + 1)
+                retval.extend(seq)
+                fill = False
+            retval.append(item)
+        return retval
 
 
 class Separators(click.ParamType):
